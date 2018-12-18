@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>steam</title>
+	<link rel="shortcut icon" type="text/css" href="favicon.ico">
+	<link rel="stylesheet" type="text/css" href="CSS/steam.css">
+	<script src="jquery.min.js"></script>
+	<script>
+		//jsonp请求的回调函数返回的形参就是后端所返回的数据，该函数在后端返回数据之后执行
+		function fn(data){
+			//遍历data数组,根据返回的数据给页面中插入数据内容
+			for (var i = 0; i < data.length; i++) {
+				// 克隆一个模板添加到ul中，并将模板隐藏
+				var cloneLi = $('#cloneLi').clone(true);
+				$('.ul').append(cloneLi);
+				$('.ul li').eq(0).fadeIn();
+				cloneLi.attr('id',''); //去掉id名
+				//将gameId添加到模板字符串中点击的li里
+				cloneLi.attr('gameId',data[i].gameId);
+				 //将返回数据中的name添加进去
+				cloneLi.find('.h3').html(data[i].name);
+				//将4个小图插入进去
+				for (var j = 0; j < data[i].imgUrl.length; j++) {
+					cloneLi.find('.imglist img').eq(j).attr('src',data[i].imgUrl[j]);
+				}
+				cloneLi.find('.imgBox img').attr('src', data[i].imgUrl[0]);
+				//插入价格
+				if (data[i].isSale) {
+					cloneLi.find('.discount').html(data[i].discount * 100 + '%');
+					cloneLi.find('.oldMoney').html('￥'+data[i].originPrice);
+				}
+				cloneLi.find('.PresentMoney').html('￥'+data[i].price);
+				//pop-up的游戏名添加
+				//将日期中的'-'用字符串中的replace替换成年月日的形式
+				var date = data[i].date.replace('-','年').replace('-','月') + '日';
+				cloneLi.find('.pop_up').find('.p span').html(date);
+				//弹出框的轮播图
+				for (var k = 0; k < data[i].imgUrl.length; k++) {
+					cloneLi.find('.imgul img').eq(k).attr('src',data[i].imgUrl[k]);
+				}
+				//好评判断
+				var title = cloneLi.find('.title').find('p');
+				if (data[i].evaluate == 1) {
+					title.html('好评如潮').css({color:'#2c5fc6'});
+				}
+				if (data[i].evaluate == 2) {
+					title.html('特别好评').css({color:'#66c0f4'});
+				}
+				if (data[i].evaluate == 3) {
+					title.html('多半好评').css({color:'#27b09e'});
+				}
+				if (data[i].evaluate == 4) {
+					title.html('褒贬不一').css({color:'#b9a074'});
+				}
+				if (data[i].evaluate == 5) {
+					title.html('多半差评').css({color:'#a34c25'});
+				}
+				if (data[i].evaluate == 6) {
+					title.html('差评如潮').css({color:'red'});
+				}
+				if (data[i].evaluate == 7) {
+					title.html('无评论').css({color:'#fff'});
+				}
+				for (var q = 0; q < data[i].label.length; q++) {
+					var spanlist = document.createElement('span');
+					$('.ul li').find('.lable').append(spanlist);
+					$(spanlist).html(data[i].label[q]);
+				}
+			}
+			// $('.ul li').eq(0).fadeIn();//让第一个列表项显示
+			//向右箭头的单击事件
+			// var n = 0;
+			// $('.btn_fr').click(function(){
+			// 	n++;
+			// 	if (n == data.length-1) {
+			// 		n = 0;
+			// 	}
+			// 	$('.ul li').hide();
+			// 	$('.ul li').eq(n).fadeIn();
+			// 	Spanchange(n);
+			// })
+			// $('.btn_fl').click(function(){
+			// 	if (n == 0) {
+			// 		n = data.length-1;
+			// 	}else{
+			// 		n--;
+			// 	}
+			// 	$('.ul li').hide();
+			// 	$('.ul li').eq(n).fadeIn();
+			// 	Spanchange(n);
+			// })
+			// $('.imglist img').mouseover(function(){
+			// 	$(this).closest('li').find('.imgBox').find('img').attr('src',this.src);
+			// })
+			// $('.imglist img').mouseout(function(){
+			// 	$(this).closest('li').find('.imgBox').find('img').attr('src',$(this).closest('.imglist').find('img')[0].src);
+			// })
+			//封装构造函数，面向对象
+			function Slide(wrap){
+				this.wrap = wrap;
+				this.n = 0;
+				this.count = this.wrap.find('.ul li').length;
+				console.log(this.count);
+				this.btn_fr = this.wrap.find('.btn_fr');
+				this.btn_fl = this.wrap.find('.btn_fl');
+				this.autoplay = function(){
+					
+				}
+				this.next = ()=>{
+					if (this.n !== this.count - 1) {
+						this.n++;
+					}else{
+						this.n = 0;
+					}
+					this.wrap.find('.ul li').hide();
+					this.wrap.find('.ul li').eq(this.n).fadeIn();
+				}
+				this.prev = ()=>{
+					if (this.n == 0) {
+						this.n = this.count - 1;
+					}else{
+						this.n--;
+					}
+					this.wrap.find('.ul li').hide();
+					this.wrap.find('.ul li').eq(this.n).fadeIn();
+				}
+				this.btn_fr.click(this.next);
+				this.btn_fl.click(this.prev);
+			}
+			new Slide($('.wrap'))
+			//弹出框轮播图
+			var index = 0;
+			$('.ul li').mouseenter(function(){
+				var pop_up = $(this).find('.pop_up');
+				pop_up.fadeIn();
+				imglist = pop_up.find('.imgul img');
+				imglist.eq(0).css({display : 'block'})
+				timeID = setInterval(function(){
+					imglist.hide();
+					index++;
+					if (index < imglist.length) {
+						imglist.eq(index).fadeIn();
+					}else{
+						index = 0;
+						imglist.eq(index).fadeIn();
+					}
+				},1000)
+			});
+			$('.ul li').mouseleave(function(){
+				clearInterval(timeID);
+				$('.pop_up').hide();
+				imglist.hide();
+			});
+			//轮播图下的小圆点
+			for(var k = 0;k<data.length;k++){
+				var newSpan = $('<span></span>');
+				$('.wrap').find('.point').append(newSpan);
+				if (!k) {
+					newSpan.addClass('Spanfocus');
+				}
+				newSpan.attr('index',k);
+				newSpan.click(function(){
+					var spanNum = $(this).attr('index');
+					Spanchange(spanNum);
+					$('.wrap a').find('.ul li').hide();
+					$('.wrap a').find('.ul li').eq(spanNum).fadeIn();
+				})
+			}
+			function Spanchange(n){
+				$('.wrap .point').find('span').removeClass('Spanfocus');
+				$('.wrap .point').find('span').eq(n).addClass('Spanfocus');
+			}
+			//最近浏览cookie
+			var gameli = $('.wrap .ul').find('li');
+			gameli.click(function(){
+				var gameId = $(this).attr('gameId');
+				if (localStorage.getItem('history')) {
+					localStorage.setItem('history',`${localStorage.getItem('history')},${gameId}`);
+				}else {
+					localStorage.setItem('history',gameId)
+				}
+			})
+		}
+		function fncallback(data){
+			var historyWrap = $('.history');
+			for(let Item of data){
+				$(`<a href = ${Item.href}>${Item.name}</a>`).appendTo(historyWrap)
+			}
+		}
+		window.onload =function(){
+			//轮播图的jsonp请求，动态生成一个script标签，发出http请求
+			var script = document.createElement('script');
+			script.src = 'http://wangdawei.tech:81/recommendGame?callback=fn';
+			document.getElementsByTagName('head')[0].appendChild(script);
+			//cookie历史记录的动态请求
+			//获取localStorage中history
+			var historylist = localStorage.getItem('history');
+			if (historylist) {
+				var historylist = historylist.split(',');
+				var historylist = new Set(historylist);
+				var historylist = Array.from(historylist);
+			}
+			var script = document.createElement('script');
+			script.src = `http://wangdawei.tech:81/history?callback=fncallback&gameId=${historylist}`;
+			document.getElementsByTagName('head')[0].appendChild(script);
+		}
+		</script>
+</head>
+<body>
+	<div class="header">
+		<div class="bx bx1 clear">
+			<div class="header_logo fl">
+				<img src="images/steam_logo.png">
+			</div>
+			<ul class="header_content fl">
+				<li>
+					<a href="">商店</a>
+					<dl class="dl">
+						<dt><a href="#">精选</a></dt>
+						<dt><a href="#">探索</a></dt>
+						<dt><a href="#">鉴赏家</a></dt>
+						<dt><a href="#">愿望单</a></dt>
+						<dt><a href="#">新闻</a></dt>
+						<dt><a href="#">统计</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="">社区</a>
+					<dl class="dl">
+						<dt><a href="#">主页</a></dt>
+						<dt><a href="#">讨论</a></dt>
+						<dt><a href="#">创意工坊</a></dt>
+						<dt><a href="#">市场</a></dt>
+						<dt><a href="#">实况直播</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="">关于</a>
+				</li>
+				<li>
+					<a href="">客服</a>
+				</li>
+			</ul>
+			<div class="header_fr">
+				<div class="install">
+					安装 steam
+				</div>
+				<a href="#" class="login">登陆</a>
+				<span class="span"></span>
+				<a href="#" class="language">语言</a>
+			</div>
+		</div>
+	</div>
+	<div class="main bx">
+		<div class="main_nav clear">
+			<ul class="main_ul fl clear">
+				<li class="first">
+					<a href="#">您的商店</a>
+					<dl class="main_dl1">
+						<dt><a href="#" class="f_a">商店主页</a></dt>
+						<dt><a href="#">最近查看过的</a></dt>
+						<dt><a href="#">Steam鉴赏家</a></dt>
+						<dt><a href="#">最近更新</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="#">游戏</a>
+					<dl class="main_dl1" style="width: 140px;">
+						<dt><a href="#">免费游玩</a></dt>
+						<dt><a href="#">抢先体验</a></dt>
+						<dt><a href="#">试玩</a></dt>
+						<dt><a href="#">虚拟现实</a></dt>
+						<dt><a href="#">支持Steam控制器</a></dt>
+						<dt class="f_a"><a href="#">Steam上的网吧游戏</a></dt>
+						<dt class="dt2">按类型浏览</dt>
+						<dt><a href="#">休闲</a></dt>
+						<dt><a href="#">体育</a></dt>
+						<dt><a href="#">冒险</a></dt>
+						<dt><a href="#">动作</a></dt>
+						<dt><a href="#">大型多人在线</a></dt>
+						<dt><a href="#">模拟</a></dt>
+						<dt><a href="#">独立</a></dt>
+						<dt><a href="#">竞速</a></dt>
+						<dt><a href="#">策略</a></dt>
+						<dt class="f_a"><a href="#">角色扮演</a></dt>
+						<dt class="f_a"><a href="#">查看热门标签</a></dt>
+						<dt class="dt2">按平台浏览</dt>
+						<dt><a href="#">Mac OS X</a></dt>
+						<dt><a href="#">SteamOS + Linux</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="#">软件</a>
+					<dl class="main_dl1">
+						<dt><a href="#" class="f_a">软件中心</a></dt>
+						<dt><a href="#">动画制作舆建模</a></dt>
+						<dt><a href="#">实用工具</a></dt>
+						<dt><a href="#">教育</a></dt>
+						<dt><a href="#">游戏开发</a></dt>
+						<dt><a href="#">照片编辑</a></dt>
+						<dt><a href="#">网络出版</a></dt>
+						<dt><a href="#">视频制作</a></dt>
+						<dt><a href="#">设计与插画</a></dt>
+						<dt><a href="#">音频制作</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="#">硬件</a>
+					<dl class="main_dl1">
+						<dt><a href="#">Steam控制器</a></dt>
+						<dt><a href="#">流式盒</a></dt>
+						<dt><a href="#">Htc Vive</a></dt>
+					</dl>
+				</li>
+				<li>
+					<a href="#">视频</a>
+					<dl class="main_dl1">
+						<dt><a href="#" class="f_a">视频中心</a></dt>
+						<dt class="dt2">按类型浏览</dt>
+						<dt><a href="#">电影</a></dt>
+						<dt><a href="#">剧集</a></dt>
+						<dt><a href="#">纪录片</a></dt>
+						<dt><a href="#">游戏</a></dt>
+						<dt><a href="#">教程</a></dt>
+						<dt class="f_a"><a href="#">短片</a></dt>
+						<dt class="dt2">按类型浏览</dt>
+						<dt><a href="#">动作</a></dt>
+						<dt><a href="#">日本动画</a></dt>
+						<dt><a href="#">欢乐</a></dt>
+						<dt><a href="#">剧情</a></dt>
+						<dt><a href="#">恐怖</a></dt>
+						<dt><a href="#">科幻</a></dt>
+					</dl>
+				</li>
+				<li class="last"><a href="#">新闻</a></li>
+			</ul>
+			<div class="ul_input fr">
+				<input type="text" placeholder="搜索商店">
+				<a><img src="images/jz.png"></a>
+			</div>
+		</div>
+		<div class="fl_list">
+			<div class="fl_list_img">
+				<a href="#" class="a_img"><img src="images/fl_list.png"></a>
+				礼物卡
+			</div>
+			<div class="list_li1">
+				<a href="#">现已在 steam 上推出</a>
+			</div>
+			<div class="list_li2">
+				推荐
+			</div>
+			<div class="list_li1">
+				<a href="#">
+					<span class="li1_span li1_span1"></span>由好友推荐
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span2"></span> 由鉴赏家推荐
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span3"></span> 标签
+				</a>
+			</div>
+			<div class="list_li2">
+				探索队列
+			</div>
+			<div class="list_li1">
+				<a href="#">
+					<span class="li1_span li1_span4"></span>
+					推荐
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span5"></span>
+					新品
+				</a>
+			</div>
+			<div class="list_li2">
+				浏览分类
+			</div>
+			<div class="list_li1">
+				<a href="#">
+					<span class="li1_span li1_span6"></span>
+					热销商品
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span7"></span>
+					最近更新
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span8"></span>
+					新品
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span9"></span>
+					即将推出
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span10"></span>
+					优惠
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span11"></span>
+					虚拟现实
+				</a>
+				<a href="#">
+					<span class="li1_span li1_span12"></span>
+					支持 Steam 控制器
+				</a>
+			</div>
+			<div class="list_li2">
+				按类型浏览
+			</div>
+			<div class="list_li1">
+				<a href="#">免费游玩</a>
+				<a href="#">抢先体验</a>
+				<a href="#">休闲</a>
+				<a href="#">体育</a>
+				<a href="#">冒险</a>
+				<a href="#">动作</a>
+				<a href="#">大型多人在线</a>
+				<a href="#">模拟</a>
+				<a href="#">独立</a>
+				<a href="#">竞速</a>
+				<a href="#">策略	</a>
+				<a href="#">角色扮演</a>
+			</div>
+			<div class="list_li2">
+				最近查看
+			</div>
+			<div class="list_li1 history">
+			</div>
+		</div>
+		<div class="wrap">
+			<a href="#">
+				<ul class="ul">
+				</ul>
+			</a>
+			<li id="cloneLi">
+				<div class="imgBox">
+					<img src="">
+				</div>
+				<div class="fr_box">
+					<h3 class="h3"></h3>
+					<div class="imglist">
+						<img src="">
+						<img src="">
+						<img src="">
+						<img src="">
+					</div>
+					<h4 class="h4">现已推出</h4>
+					<h4 class="h5">热销商品</h4>
+					<div class="money">
+						<span class="discount"></span>
+						<span class="oldMoney"></span>
+						<span class="PresentMoney"></span>
+					</div>
+				</div>
+				<div class="pop_up">
+					<div class="arrow"></div>
+					<h3 class="h3"></h3>
+					<p class="p">发行于：<span></span></p>
+					<div class="Visual">
+						<div class="imgul">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+							<img src="" alt="">
+						</div>
+					</div>
+					<div class="title">
+						总体用户测评：
+						<p class="p1"><span class="span1"></span></p>
+					</div>
+					<p style="font-size: 12px;color: #333;margin-top: 10px;">用户标签：</p>
+					<div class="lable">
+					</div>
+				</div>
+			</li>
+			<div class="btn_fl">
+				<div>
+				</div>
+			</div>
+			<div class="btn_fr">
+				<div>
+				</div>
+			</div>
+			<div class="point">
+			</div>
+		</div>
+	</div>
+</body>
+</html>
